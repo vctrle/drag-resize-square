@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable and Resizable Square</title>
+    <style>
+        #main-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border: 1px solid black; /* For visibility */
+            overflow: hidden;
+        }
+
+        #square {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 1px solid black; /* For visibility */
+            cursor: move;
+        }
+
+        .handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: black; /* For visibility */
+        }
+
+        .top-left {
+            top: -5px;
+            left: -5px;
+            cursor: nwse-resize;
+        }
+
+        .top-right {
+            top: -5px;
+            right: -5px;
+            cursor: nesw-resize;
+        }
+
+        .bottom-left {
+            bottom: -5px;
+            left: -5px;
+            cursor: nesw-resize;
+        }
+
+        .bottom-right {
+            bottom: -5px;
+            right: -5px;
+            cursor: nwse-resize;
+        }
+
+        .middle-top {
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .middle-right {
+            top: 50%;
+            right: -5px;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .middle-bottom {
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .middle-left {
+            top: 50%;
+            left: -5px;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+    </style>
+</head>
+<body>
+<h2>Draggable and Resizable Square</h2>
+<div id="main-container">
+    <div id="square">
+        <div class="handle top-left"></div>
+        <div class="handle top-right"></div>
+        <div class="handle bottom-left"></div>
+        <div class="handle bottom-right"></div>
+        <div class="handle middle-top"></div>
+        <div class="handle middle-right"></div>
+        <div class="handle middle-bottom"></div>
+        <div class="handle middle-left"></div>
+    </div>
+</div>
+
+<script>
+    const square = document.getElementById('square');
+    const handles = document.querySelectorAll('.handle');
+    const container = document.getElementById('main-container');
+    let isDragging = false;
+    let isResizing = false;
+    let resizeDir = '';
+    let initialMouseX, initialMouseY, initialWidth, initialHeight, initialLeft, initialTop;
+
+    const mouseMoveHandler = (e) => {
+        if (isDragging) {
+            const deltaX = e.clientX - initialMouseX;
+            const deltaY = e.clientY - initialMouseY;
+            let newLeft = initialLeft + deltaX;
+            let newTop = initialTop + deltaY;
+
+            // Keep square within the container
+            if (newLeft < 0) {
+                newLeft = 0;
+            }
+            if (newTop < 0) {
+                newTop = 0;
+            }
+            if (newLeft + square.offsetWidth > container.clientWidth) {
+                newLeft = container.clientWidth - square.offsetWidth;
+            }
+            if (newTop + square.offsetHeight > container.clientHeight) {
+                newTop = container.clientHeight - square.offsetHeight;
+            }
+
+            square.style.left = newLeft + 'px';
+            square.style.top = newTop + 'px';
+        } else if (isResizing) {
+            const deltaX = e.clientX - initialMouseX;
+            const deltaY = e.clientY - initialMouseY;
+
+            let newWidth, newHeight, newLeft, newTop;
+
+            switch (resizeDir) {
+                case 'top-left':
+                    newWidth = initialWidth - deltaX;
+                    newHeight = initialHeight - deltaY;
+                    newLeft = initialLeft + deltaX;
+                    newTop = initialTop + deltaY;
+                    if (newWidth > 10 && newHeight > 10) {
+                        if (newLeft >= 0) {
+                            square.style.width = newWidth + 'px';
+                            square.style.left = newLeft + 'px';
+                        } else {
+                            square.style.width = (initialWidth + initialLeft) + 'px';
+                            square.style.left = '0px';
+                        }
+                        if (newTop >= 0) {
+                            square.style.height = newHeight + 'px';
+                            square.style.top = newTop + 'px';
+                        } else {
+                            square.style.height = (initialHeight + initialTop) + 'px';
+                            square.style.top = '0px';
+                        }
+                    }
+                    break;
+                case 'top-right':
+                    newWidth = initialWidth + deltaX;
+                    newHeight = initialHeight - deltaY;
+                    newTop = initialTop + deltaY;
+                    if (newWidth > 10 && newHeight > 10) {
+                        if (newWidth + initialLeft <= container.clientWidth) {
+                            square.style.width = newWidth + 'px';
+                        } else {
+                            square.style.width = (container.clientWidth - initialLeft) + 'px';
+                        }
+                        if (newTop >= 0) {
+                            square.style.height = newHeight + 'px';
+                            square.style.top = newTop + 'px';
+                        } else {
+                            square.style.height = (initialHeight + initialTop) + 'px';
+                            square.style.top = '0px';
+                        }
+                    }
+                    break;
+                case 'bottom-left':
+                    newWidth = initialWidth - deltaX;
+                    newHeight = initialHeight + deltaY;
+                    newLeft = initialLeft + deltaX;
+                    if (newWidth > 10 && newHeight > 10) {
+                        if (newLeft >= 0) {
+                            square.style.width = newWidth + 'px';
+                            square.style.left = newLeft + 'px';
+                        } else {
+                            square.style.width = (initialWidth + initialLeft) + 'px';
+                            square.style.left = '0px';
+                        }
+                        if (newHeight + initialTop <= container.clientHeight) {
+                            square.style.height = newHeight + 'px';
+                        } else {
+                            square.style.height = (container.clientHeight - initialTop) + 'px';
+                        }
+                    }
+                    break;
+                case 'bottom-right':
+                    newWidth = initialWidth + deltaX;
+                    newHeight = initialHeight + deltaY;
+                    if (newWidth > 10 && newHeight > 10) {
+                        if (newWidth + initialLeft <= container.clientWidth) {
+                            square.style.width = newWidth + 'px';
+                        } else {
+                            square.style.width = (container.clientWidth - initialLeft) + 'px';
+                        }
+                        if (newHeight + initialTop <= container.clientHeight) {
+                            square.style.height = newHeight + 'px';
+                        } else {
+                            square.style.height = (container.clientHeight - initialTop) + 'px';
+                        }
+                    }
+                    break;
+                case 'middle-top':
+                    newHeight = initialHeight - deltaY;
+                    newTop = initialTop + deltaY;
+                    if (newHeight > 10) {
+                        if (newTop >= 0) {
+                            square.style.height = newHeight + 'px';
+                            square.style.top = newTop + 'px';
+                        } else {
+                            square.style.height = (initialHeight + initialTop) + 'px';
+                            square.style.top = '0px';
+                        }
+                    }
+                    break;
+                case 'middle-right':
+                    newWidth = initialWidth + deltaX;
+                    if (newWidth > 10) {
+                        if (newWidth + initialLeft <= container.clientWidth) {
+                            square.style.width = newWidth + 'px';
+                        } else {
+                            square.style.width = (container.clientWidth - initialLeft) + 'px';
+                        }
+                    }
+                    break;
+                case 'middle-bottom':
+                    newHeight = initialHeight + deltaY;
+                    if (newHeight > 10) {
+                        if (newHeight + initialTop <= container.clientHeight) {
+                            square.style.height = newHeight + 'px';
+                        } else {
+                            square.style.height = (container.clientHeight - initialTop) + 'px';
+                        }
+                    }
+                    break;
+                case 'middle-left':
+                    newWidth = initialWidth - deltaX;
+                    newLeft = initialLeft + deltaX;
+                    if (newWidth > 10) {
+                        if (newLeft >= 0) {
+                            square.style.width = newWidth + 'px';
+                            square.style.left = newLeft + 'px';
+                        } else {
+                            square.style.width = (initialWidth + initialLeft) + 'px';
+                            square.style.left = '0px';
+                        }
+                    }
+                    break;
+            }
+        }
+    };
+
+    const mouseUpHandler = () => {
+        isDragging = false;
+        isResizing = false;
+        square.style.cursor = 'default';
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+    };
+
+    square.addEventListener('mousedown', (e) => {
+        initialMouseX = e.clientX;
+        initialMouseY = e.clientY;
+        initialLeft = square.offsetLeft;
+        initialTop = square.offsetTop;
+        initialWidth = square.offsetWidth;
+        initialHeight = square.offsetHeight;
+        isDragging = true;
+        square.style.cursor = 'move';
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', mouseUpHandler);
+    });
+
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            initialMouseX = e.clientX;
+            initialMouseY = e.clientY;
+            initialLeft = square.offsetLeft;
+            initialTop = square.offsetTop;
+            initialWidth = square.offsetWidth;
+            initialHeight = square.offsetHeight;
+            isResizing = true;
+            resizeDir = e.target.className.split(' ')[1];
+            square.style.cursor = window.getComputedStyle(e.target).cursor;
+            e.stopPropagation();
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        });
+    });
+</script>
+
+</body>
+</html>
